@@ -1,6 +1,7 @@
 # Rusty-CL
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)
+![Crates.io](https://img.shields.io/crates/v/rusty-cl)
 
 Rust(y) binding for OpenCL.
 
