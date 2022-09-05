@@ -143,6 +143,17 @@ impl Platform {
     }
 }
 
+impl Default for Platform {
+    /// Get the default platform of the system.
+    ///
+    /// # Panics
+    ///
+    /// This function may panic if there are no available platforms.
+    fn default() -> Self {
+        Platform::get(0).unwrap()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
