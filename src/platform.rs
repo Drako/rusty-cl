@@ -6,8 +6,8 @@ use crate::types::{PlatformId, PlatformInfo, Profile};
 ///
 /// # Remarks
 ///
-/// While the underlying function may fail, when invalid parameters are supplied,
-/// this function always succeeds, as make sure not to pass such invalid parameters.
+/// While the underlying function may fail when invalid parameters are supplied,
+/// this function always succeeds, as we make sure not to pass such invalid parameters.
 pub fn cl_get_platform_ids() -> Vec<PlatformId> {
     let mut num_platforms: u32 = 0;
     let result = unsafe { clGetPlatformIDs(0, std::ptr::null_mut(), &mut num_platforms) };
