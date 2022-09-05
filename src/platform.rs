@@ -1,6 +1,6 @@
 use crate::native::{clGetPlatformIDs, clGetPlatformInfo};
 use crate::result::{Error, Result};
-use crate::types::{PlatformId, PlatformInfo, Profile};
+use crate::types::{PlatformId, PlatformInfo, Profile, Version};
 
 /// Get all available platform IDs.
 ///
@@ -80,7 +80,7 @@ pub fn cl_get_platform_info(platform: PlatformId, name: PlatformInfo) -> Result<
 pub struct Platform {
     id: PlatformId,
     profile: Profile,
-    version: String,
+    version: Version,
     name: String,
     vendor: String,
     extensions: Vec<String>,
@@ -98,7 +98,7 @@ impl Platform {
         Ok(Self {
             id,
             profile: Profile::try_from(cl_get_platform_info(id, PlatformInfo::Profile)?).unwrap(),
-            version: cl_get_platform_info(id, PlatformInfo::Version)?,
+            version: Version::try_from(cl_get_platform_info(id, PlatformInfo::Version)?).unwrap(),
             name: cl_get_platform_info(id, PlatformInfo::Name)?,
             vendor: cl_get_platform_info(id, PlatformInfo::Vendor)?,
             extensions: cl_get_platform_info(id, PlatformInfo::Extensions)?.split(" ").map(String::from).collect(),
@@ -134,7 +134,7 @@ impl Platform {
     }
 
     /// The OpenCL version of the platform.
-    pub fn version(&self) -> &str {
+    pub fn version(&self) -> &Version {
         &self.version
     }
 
@@ -178,7 +178,8 @@ mod tests {
             assert_eq!(id, platform.id());
             let profile: Profile = cl_get_platform_info(id, PlatformInfo::Profile).unwrap().try_into().unwrap();
             assert_eq!(profile, platform.profile());
-            assert_eq!(cl_get_platform_info(id, PlatformInfo::Version).unwrap(), platform.version());
+            let version: Version = cl_get_platform_info(id, PlatformInfo::Version).unwrap().try_into().unwrap();
+            assert_eq!(version, *platform.version());
             assert_eq!(cl_get_platform_info(id, PlatformInfo::Name).unwrap(), platform.name());
             assert_eq!(cl_get_platform_info(id, PlatformInfo::Vendor).unwrap(), platform.vendor());
             assert_eq!(cl_get_platform_info(id, PlatformInfo::Extensions).unwrap(), platform.extensions().join(" "));
