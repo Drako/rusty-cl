@@ -1,6 +1,6 @@
 use crate::native::{clGetPlatformIDs, clGetPlatformInfo};
 use crate::result::{Error, Result};
-use crate::types::{PlatformId, PlatformInfo};
+use crate::types::{PlatformId, PlatformInfo, Profile};
 
 /// Get all available platform IDs.
 ///
@@ -79,7 +79,7 @@ pub fn cl_get_platform_info(platform: PlatformId, name: PlatformInfo) -> Result<
 #[cfg_attr(test, derive(Debug))]
 pub struct Platform {
     id: PlatformId,
-    profile: String,
+    profile: Profile,
     version: String,
     name: String,
     vendor: String,
@@ -97,7 +97,7 @@ impl Platform {
     pub fn get(id: PlatformId) -> Result<Self> {
         Ok(Self {
             id,
-            profile: cl_get_platform_info(id, PlatformInfo::Profile)?,
+            profile: Profile::try_from(cl_get_platform_info(id, PlatformInfo::Profile)?).unwrap(),
             version: cl_get_platform_info(id, PlatformInfo::Version)?,
             name: cl_get_platform_info(id, PlatformInfo::Name)?,
             vendor: cl_get_platform_info(id, PlatformInfo::Vendor)?,
@@ -116,10 +116,8 @@ impl Platform {
     }
 
     /// The profile of the platform.
-    ///
-    /// This is either `"FULL_PROFILE"` or `"EMBEDDED_PROFILE"`.
-    pub fn profile(&self) -> &str {
-        &self.profile
+    pub fn profile(&self) -> Profile {
+        self.profile
     }
 
     /// The OpenCL version of the platform.
@@ -165,7 +163,8 @@ mod tests {
             assert_ne!(id, 0);
             let platform = Platform::get(id).unwrap();
             assert_eq!(id, platform.id());
-            assert_eq!(cl_get_platform_info(id, PlatformInfo::Profile).unwrap(), platform.profile());
+            let profile: Profile = cl_get_platform_info(id, PlatformInfo::Profile).unwrap().try_into().unwrap();
+            assert_eq!(profile, platform.profile());
             assert_eq!(cl_get_platform_info(id, PlatformInfo::Version).unwrap(), platform.version());
             assert_eq!(cl_get_platform_info(id, PlatformInfo::Name).unwrap(), platform.name());
             assert_eq!(cl_get_platform_info(id, PlatformInfo::Vendor).unwrap(), platform.vendor());
