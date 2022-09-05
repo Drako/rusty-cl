@@ -1,6 +1,6 @@
 use rusty_cl::platform::Platform;
 
-fn main() -> rusty_cl::result::Result<()> {
+fn main() {
     let platforms = Platform::get_all();
     println!("Number of platforms                               {}", platforms.len());
     for platform in platforms {
@@ -11,10 +11,9 @@ fn main() -> rusty_cl::result::Result<()> {
         println!("  Platform Extensions                             {}", platform.extensions().join(" "));
     }
 
-    println!();
-    println!("NULL platform behavior");
-    let null_platform = Platform::get(0)?;
-    println!("  clGetPlatformInfo(NULL, CL_PLATFORM_NAME, ...)  {}", null_platform.name());
-
-    Ok(())
+    if let Ok(null_platform) = Platform::get(0) {
+        println!();
+        println!("NULL platform behavior");
+        println!("  clGetPlatformInfo(NULL, CL_PLATFORM_NAME, ...)  {}", null_platform.name());
+    }
 }
