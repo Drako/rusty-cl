@@ -1,10 +1,10 @@
 use crate::native::{clGetPlatformIDs, clGetPlatformInfo};
-use crate::types::{PlatformId, PlatformInfo};
 use crate::result::{Error, Result};
+use crate::types::{PlatformId, PlatformInfo};
 
 /// Get all available platform IDs.
 ///
-/// # REMARKS
+/// # Remarks
 ///
 /// While the underlying function may fail, when invalid parameters are supplied,
 /// this function always succeeds, as make sure not to pass such invalid parameters.
@@ -31,11 +31,18 @@ pub fn cl_get_platform_ids() -> Vec<PlatformId> {
 /// * `platform` - The platform for which the info should be queried.
 /// * `name` - Which info to query.
 ///
+/// # Errors
+///
+/// The following errors may be returned:
+///
+/// * `Error::InvalidPlatform` - An invalid platform ID was passed.
+///
 /// # Examples
 ///
 /// ```no_run
 /// # use rusty_cl::platform::{cl_get_platform_ids, cl_get_platform_info};
 /// # use rusty_cl::types::PlatformInfo;
+/// # fn main() -> rusty_cl::result::Result<()> {
 /// for platform_id in cl_get_platform_ids() {
 ///     println!("Profile: {}", cl_get_platform_info(platform_id, PlatformInfo::Profile)?);
 ///     println!("Version: {}", cl_get_platform_info(platform_id, PlatformInfo::Version)?);
@@ -43,6 +50,8 @@ pub fn cl_get_platform_ids() -> Vec<PlatformId> {
 ///     println!("Vendor: {}", cl_get_platform_info(platform_id, PlatformInfo::Vendor)?);
 ///     println!("Extensions: {}", cl_get_platform_info(platform_id, PlatformInfo::Extensions)?);
 /// }
+/// # Ok(())
+/// # }
 /// ```
 pub fn cl_get_platform_info(platform: PlatformId, name: PlatformInfo) -> Result<String> {
     let mut len: usize = 0;
@@ -65,15 +74,91 @@ pub fn cl_get_platform_info(platform: PlatformId, name: PlatformInfo) -> Result<
     Ok(unsafe { std::str::from_utf8_unchecked(content.as_slice()) }.to_string())
 }
 
+/// Structure containing information about an OpenCL platform.
+#[derive(Clone)]
+#[cfg_attr(test, derive(Debug))]
+pub struct Platform {
+    id: PlatformId,
+    profile: String,
+    version: String,
+    name: String,
+    vendor: String,
+    extensions: Vec<String>,
+}
+
+impl Platform {
+    /// Get the platform information for the given platform ID.
+    ///
+    /// # Errors
+    ///
+    /// The following errors may be returned:
+    ///
+    /// * `Error::InvalidPlatform` - An invalid platform ID was passed.
+    pub fn get(id: PlatformId) -> Result<Self> {
+        Ok(Self {
+            id,
+            profile: cl_get_platform_info(id, PlatformInfo::Profile)?,
+            version: cl_get_platform_info(id, PlatformInfo::Version)?,
+            name: cl_get_platform_info(id, PlatformInfo::Name)?,
+            vendor: cl_get_platform_info(id, PlatformInfo::Vendor)?,
+            extensions: cl_get_platform_info(id, PlatformInfo::Extensions)?.split(" ").map(String::from).collect(),
+        })
+    }
+
+    /// Get all available platforms.
+    pub fn get_all() -> Vec<Platform> {
+        cl_get_platform_ids().into_iter().filter_map(|id| Platform::get(id).ok()).collect()
+    }
+
+    /// The ID of the platform.
+    pub fn id(&self) -> PlatformId {
+        self.id
+    }
+
+    /// The profile of the platform.
+    ///
+    /// This is either `"FULL_PROFILE"` or `"EMBEDDED_PROFILE"`.
+    pub fn profile(&self) -> &str {
+        &self.profile
+    }
+
+    /// The OpenCL version of the platform.
+    pub fn version(&self) -> &str {
+        &self.version
+    }
+
+    /// The name of the platform.
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// The vendor of the platform.
+    pub fn vendor(&self) -> &str {
+        &self.vendor
+    }
+
+    /// The available extensions on the platform.
+    pub fn extensions(&self) -> &[String] {
+        &self.extensions
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn can_get_platform_ids() {
+    fn query_platforms() {
         let platform_ids = cl_get_platform_ids();
         for id in platform_ids {
             assert_ne!(id, 0);
+            let platform = Platform::get(id).unwrap();
+            assert_eq!(id, platform.id());
+            assert_eq!(cl_get_platform_info(id, PlatformInfo::Profile).unwrap(), platform.profile());
+            assert_eq!(cl_get_platform_info(id, PlatformInfo::Version).unwrap(), platform.version());
+            assert_eq!(cl_get_platform_info(id, PlatformInfo::Name).unwrap(), platform.name());
+            assert_eq!(cl_get_platform_info(id, PlatformInfo::Vendor).unwrap(), platform.vendor());
+            assert_eq!(cl_get_platform_info(id, PlatformInfo::Extensions).unwrap(), platform.extensions().join(" "));
         }
     }
 }

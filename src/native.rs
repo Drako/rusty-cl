@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 use crate::types::{PlatformId, PlatformInfo};
 
 #[cfg(not(docsrs))]

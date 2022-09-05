@@ -1,3 +1,6 @@
+#![deny(missing_docs)]
+#![doc = "Rust(y) binding for OpenCL"]
+
 /// Module containing all the native function declarations.
 pub(crate) mod native;
 
