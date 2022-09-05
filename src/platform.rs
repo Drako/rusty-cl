@@ -106,6 +106,19 @@ impl Platform {
     }
 
     /// Get all available platforms.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use rusty_cl::platform::Platform;
+    /// for platform in Platform::get_all() {
+    ///     println!("Profile: {}", platform.profile());
+    ///     println!("Version: {}", platform.version());
+    ///     println!("Name: {}", platform.name());
+    ///     println!("Vendor: {}", platform.vendor());
+    ///     println!("Extensions: {}", platform.extensions().join(" "));
+    /// }
+    /// ```
     pub fn get_all() -> Vec<Platform> {
         cl_get_platform_ids().into_iter().filter_map(|id| Platform::get(id).ok()).collect()
     }
