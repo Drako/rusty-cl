@@ -1,8 +1,12 @@
 use std::fmt::{Display, Formatter};
+use std::ops::{BitAnd, BitOr, Not};
 use std::str::FromStr;
 
 /// cl_platform_id
 pub type PlatformId = usize;
+
+/// cl_device_id
+pub type DeviceId = usize;
 
 /// cl_platform_info
 #[derive(Eq, PartialEq, Copy, Clone)]
@@ -19,6 +23,56 @@ pub enum PlatformInfo {
     Vendor = 0x0903,
     /// Space-separated list of extension names (the extension names themselves do not contain any spaces) supported by the platform.
     Extensions = 0x0904,
+}
+
+/// Device type to query/filter for or type of a given device.
+#[derive(Eq, PartialEq, Copy, Clone)]
+#[cfg_attr(test, derive(Debug))]
+#[repr(transparent)]
+pub struct DeviceType(u64);
+
+impl DeviceType {
+    /// The default device of the given platform.
+    pub const DEFAULT: Self = DeviceType(1 << 0);
+    /// A CPU.
+    pub const CPU: Self = DeviceType(1 << 1);
+    /// A GPGPU.
+    pub const GPU: Self = DeviceType(1 << 2);
+    /// A dedicated compute card.
+    pub const ACCELERATOR: Self = DeviceType(1 << 3);
+    /// A custom device.
+    pub const CUSTOM: Self = DeviceType(1 << 4);
+    /// All device types.
+    pub const ALL: Self = DeviceType(0xFFFFFFFF);
+
+    /// Get the raw underlying value.
+    pub fn raw(&self) -> u64 {
+        unsafe { std::mem::transmute_copy(self) }
+    }
+}
+
+impl BitOr for DeviceType {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        Self(self.0 | rhs.0)
+    }
+}
+
+impl BitAnd for DeviceType {
+    type Output = Self;
+
+    fn bitand(self, rhs: Self) -> Self::Output {
+        Self(self.0 & rhs.0)
+    }
+}
+
+impl Not for DeviceType {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        Self((!self.0) & DeviceType::ALL.0)
+    }
 }
 
 /// An OpenCL profile (Full or embedded).

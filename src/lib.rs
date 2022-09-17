@@ -12,3 +12,6 @@ pub mod types;
 
 /// Platform related functions and types.
 pub mod platform;
+
+/// Device related functions and types.
+pub mod device;
