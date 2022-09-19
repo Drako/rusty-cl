@@ -159,7 +159,7 @@ impl Default for Platform {
     ///
     /// # Panics
     ///
-    /// This function may panic if there are no available platforms.
+    /// This function may panic if there are no available platforms or if there is no default.
     fn default() -> Self {
         Platform::get(0).unwrap()
     }

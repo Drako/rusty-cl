@@ -1,6 +1,6 @@
 [package]
 name = "rusty-cl"
-version = "0.1.7"
+version = "0.1.8"
 edition = "2021"
 description = "Rusty binding for OpenCL"
 authors = ["Felix Bytow <drako@drako.guru>"]
@@ -16,8 +16,5 @@ build = "build.rs"
 [lib]
 test = true
 doctest = true
-
-[package.metadata.docs.rs]
-rustc-args = ["--cfg", "docsrs"]
 
 [workspace]
