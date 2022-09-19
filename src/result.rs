@@ -10,8 +10,14 @@ pub enum Error {
     /// The operation succeeded.
     Success = 0,
 
+    /// No OpenCL devices matched the queried device types.
+    DeviceNotFound = -1,
+
     /// An invalid value was passed as parameter.
     InvalidValue = -30,
+
+    /// An invalid device type was passed as parameter.
+    InvalidDeviceType = -31,
 
     /// An invalid platform ID was passed as parameter.
     InvalidPlatform = -32,
@@ -28,7 +34,9 @@ impl From<i32> for Error {
     fn from(code: i32) -> Self {
         match code {
             0 => Error::Success,
+            -1 => Error::DeviceNotFound,
             -30 => Error::InvalidValue,
+            -31 => Error::InvalidDeviceType,
             -32 => Error::InvalidPlatform,
             _ => Error::Unknown,
         }
@@ -40,7 +48,9 @@ impl Display for Error {
         match *self {
             Error::Unknown => write!(f, "An unknown error occurred."),
             Error::Success => write!(f, "The operation completed successfully."),
+            Error::DeviceNotFound => write!(f, "No OpenCL devices matched the queried device types."),
             Error::InvalidValue => write!(f, "An invalid value was passed as parameter."),
+            Error::InvalidDeviceType => write!(f, "An invalid device type was passed as parameter."),
             Error::InvalidPlatform => write!(f, "An invalid platform ID was passed as parameter."),
         }
     }
