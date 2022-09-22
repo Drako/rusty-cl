@@ -1,5 +1,6 @@
-use crate::native::clGetDeviceIDs;
-use crate::types::{DeviceId, DeviceType, PlatformId};
+use std::ffi::c_void;
+use crate::native::{clGetDeviceIDs, clGetDeviceInfo};
+use crate::types::{DeviceId, DeviceInfo, DeviceType, PlatformId};
 use crate::result::{Result, Error};
 
 /// Get all available device IDs with the given device type on the given platform.
@@ -35,4 +36,50 @@ pub fn cl_get_device_ids(platform: PlatformId, device_type: DeviceType) -> Resul
     }
 
     Ok(device_ids)
+}
+
+/// Get a device info for the given device.
+///
+/// # Safety
+///
+/// The caller must make sure the generic type parameter matches the type of the device info.
+pub unsafe fn cl_get_device_info<T: Sized>(device: DeviceId, name: DeviceInfo) -> Result<T> {
+    let mut value_size: usize = 0;
+    let result = Error::from(clGetDeviceInfo(device, name, 0, std::ptr::null_mut(), &mut value_size));
+    if result != Error::Success {
+        return Err(result);
+    }
+    if value_size != std::mem::size_of::<T>() {
+        return Err(Error::InvalidValue);
+    }
+
+    let mut value = std::mem::MaybeUninit::<T>::uninit();
+    let result = Error::from(clGetDeviceInfo(device, name, value_size, value.as_mut_ptr() as *mut c_void, std::ptr::null_mut()));
+    if result != Error::Success {
+        return Err(result);
+    }
+
+    Ok(value.assume_init())
+}
+
+/// Get a device info for the given device.
+///
+/// # Safety
+///
+/// The caller must make sure the type of the device info is a actually a string.
+pub unsafe fn cl_get_device_info_string(device: DeviceId, name: DeviceInfo) -> Result<String> {
+    let mut value_size: usize = 0;
+    let result = Error::from(clGetDeviceInfo(device, name, 0, std::ptr::null_mut(), &mut value_size));
+    if result != Error::Success {
+        return Err(result);
+    }
+
+    let mut value: Vec<u8> = vec![0; value_size];
+    let result = Error::from(clGetDeviceInfo(device, name, value_size, value.as_mut_ptr() as *mut c_void, std::ptr::null_mut()));
+    if result != Error::Success {
+        return Err(result);
+    }
+
+    value.truncate(value.len() - 1);
+    Ok(std::str::from_utf8_unchecked(value.as_slice()).to_string())
 }
